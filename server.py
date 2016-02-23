@@ -3,7 +3,8 @@ import os
 import time
 import socketio
 import eventlet
-from flask import Flask, Response, request, render_template
+from eventlet import wsgi
+from flask import Flask, response, request, render_template
 
 sio = socketio.Server()
 app = Flask(__name__)
