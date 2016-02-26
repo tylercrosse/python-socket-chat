@@ -1,34 +1,83 @@
-import json
-import os
-import time
-import socketio
-import eventlet
-from eventlet import wsgi
-from flask import Flask, response, request, render_template
+# set this to 'threading', 'eventlet', or 'gevent'
+async_mode = 'eventlet'
 
-sio = socketio.Server()
+import eventlet
+eventlet.monkey_patch()
+
+import time
+from threading import Thread
+from flask import Flask, render_template
+import socketio
+
+sio = socketio.Server(logger=True, async_mode=async_mode)
 app = Flask(__name__)
+app.wsgi_app = socketio.Middleware(sio, app.wsgi_app)
+app.config['SECRET_KEY'] = 'secret!'
+thread = None
 
 @app.route('/')
 def index():
-    """Serve the client-side application."""
     return render_template('index.html')
 
-@sio.on('connect')
-def connect(sid, environ):
-    print('connect ', sid)
+# @sio.on('disconnect request', namespace='/test')
+# def disconnect_request(sid):
+#     sio.disconnect(sid, namespace='/test')
 
-@sio.on('my message')
-def message(sid, data):
-    print('message ', data)
 
-@sio.on('disconnect')
-def disconnect(sid):
-    print('disconnect ', sid)
+@sio.on('connect', namespace='/test')
+def test_connect(sid, environ):
+    sio.emit('connect', {'data': 'Connected', 'count': 0}, room=sid,
+             namespace='/test')
+
+
+# @sio.on('disconnect', namespace='/test')
+# def test_disconnect(sid):
+#     print('Client disconnected')
+
+
+@sio.on('lobby message', namespace='/test')
+def lobby_message(sid, message):
+    sio.emit('lobby message', {'data': message['data']}, room=sid,
+             namespace='/test')
+
+
+# @sio.on('my broadcast event', namespace='/test')
+# def test_broadcast_message(sid, message):
+#     sio.emit('my response', {'data': message['data']}, namespace='/test')
+
+
+# @sio.on('join', namespace='/test')
+# def join(sid, message):
+#     sio.enter_room(sid, message['room'], namespace='/test')
+#     sio.emit('my response', {'data': 'Entered room: ' + message['room']},
+#              room=sid, namespace='/test')
+
+
+# @sio.on('leave', namespace='/test')
+# def leave(sid, message):
+#     sio.leave_room(sid, message['room'], namespace='/test')
+#     sio.emit('my response', {'data': 'Left room: ' + message['room']},
+#              room=sid, namespace='/test')
+
+
+# @sio.on('close room', namespace='/test')
+# def close(sid, message):
+#     sio.emit('my response',
+#              {'data': 'Room ' + message['room'] + ' is closing.'},
+#              room=message['room'], namespace='/test')
+#     sio.close_room(message['room'], namespace='/test')
+
+
+# @sio.on('my room message', namespace='/test')
+# def send_room_message(sid, message):
+#     sio.emit('my response', {'data': message['data']}, room=message['room'],
+#              namespace='/test')
+
+
+
+
 
 if __name__ == '__main__':
-    # wrap Flask application with socketio's middleware
-    app = socketio.Middleware(sio, app)
-
-    # deploy as an eventlet WSGI server
-    eventlet.wsgi.server(eventlet.listen(('', 8000)), app)
+    # deploy with eventlet
+    import eventlet
+    eventlet.wsgi.server(eventlet.listen(('', 7000)), app)
