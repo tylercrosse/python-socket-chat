@@ -7,7 +7,7 @@ $(function() {
   });
 
   socket.on('lobby message' ,function (data) {
-    console.log('lobby message');
+    console.log(data.data);
   });
 
 });

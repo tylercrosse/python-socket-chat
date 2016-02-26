@@ -24,10 +24,9 @@ def index():
 #     sio.disconnect(sid, namespace='/test')
 
 
-@sio.on('connect', namespace='/test')
+@sio.on('connect')
 def test_connect(sid, environ):
-    sio.emit('connect', {'data': 'Connected', 'count': 0}, room=sid,
-             namespace='/test')
+    sio.emit('connect', {'data': 'Connected', 'count': 0})
 
 
 # @sio.on('disconnect', namespace='/test')
@@ -35,10 +34,9 @@ def test_connect(sid, environ):
 #     print('Client disconnected')
 
 
-@sio.on('lobby message', namespace='/test')
+@sio.on('lobby message')
 def lobby_message(sid, message):
-    sio.emit('lobby message', {'data': message['data']}, room=sid,
-             namespace='/test')
+    sio.emit('lobby message', {'data': message})
 
 
 # @sio.on('my broadcast event', namespace='/test')
