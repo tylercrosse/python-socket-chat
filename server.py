@@ -1,4 +1,3 @@
-# set this to 'threading', 'eventlet', or 'gevent'
 async_mode = 'eventlet'
 
 import eventlet
@@ -24,9 +23,15 @@ def index():
 #     sio.disconnect(sid, namespace='/test')
 
 
+
+
 @sio.on('connect')
-def test_connect(sid, environ):
-    sio.emit('connect', {'data': 'Connected', 'count': 0})
+def test_connect(sid, self):
+    # print '*' * 50
+    # print list(sio.manager.get_namespaces())
+    # print list(sio.manager.get_participants('/', None))
+    # print '*' * 50
+    sio.emit('connect', {'data': 'Connected', 'lobby_users': 'lobby_users'})
 
 
 # @sio.on('disconnect', namespace='/test')
