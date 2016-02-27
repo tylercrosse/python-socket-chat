@@ -3,6 +3,7 @@ async_mode = 'eventlet'
 import eventlet
 eventlet.monkey_patch()
 
+import names
 import time
 from threading import Thread
 from flask import Flask, render_template
@@ -22,26 +23,42 @@ def index():
 # def disconnect_request(sid):
 #     sio.disconnect(sid, namespace='/test')
 
+# 'join lobby', 'lobby message', 'user joined', 'user left'
+# list(sio.manager.get_namespaces())
+# list(sio.manager.get_participants('/', None))
+# sio.user = [names.get_first_name()]
 
-
+users = {}
 
 @sio.on('connect')
-def test_connect(sid, self):
-    # print '*' * 50
-    # print list(sio.manager.get_namespaces())
-    # print list(sio.manager.get_participants('/', None))
-    # print '*' * 50
-    sio.emit('connect', {'data': 'Connected', 'lobby_users': 'lobby_users'})
+def connect(sid, environ):
+    users.update({sid: names.get_first_name()}) # add new username to users
+    print '*' * 50
+    print 'connect'
+    print users
+    print '*' * 50
+    sio.emit('users list', users)
+
+@sio.on('disconnect')
+def disconnect(sid):
+    print '8' * 50
+    print users
+    del users[sid]
+    print 'disconnect'
+    print users
+    print '8' * 50
+    sio.emit('users list', users)
 
 
-# @sio.on('disconnect', namespace='/test')
-# def test_disconnect(sid):
-#     print('Client disconnected')
 
 
-@sio.on('lobby message')
-def lobby_message(sid, message):
-    sio.emit('lobby message', {'data': message})
+
+
+    # @sio.on('lobby message')
+    # def lobby_message(sid, message):
+    #     print '*' * 50
+    #     print message
+    #     sio.emit('lobby message', {'message': message, 'user': 'sio.user'})
 
 
 # @sio.on('my broadcast event', namespace='/test')

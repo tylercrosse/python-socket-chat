@@ -11,7 +11,34 @@
 </head>
 
 <body>
-  <div id="content"></div>
+  <div id="users"><strong>Users: </strong></div>
+  <div id="messages"><strong>Messages: </strong></div>
+  <script>
+    $(function() {
+      var socket = io();
+      var username = '';
+
+      var addUser = function (data) {
+        $('#users').append('<p id='+ data.user[1] +'>'+ data.user[1] +'</p>');
+      };
+
+      var removeUser = function (data) {
+
+      };
+
+      var addChatMessage = function (data, options) {
+        $('#messages').append('<p>'+ data.message +'</p>');
+      };
+
+      //**** Socket Events ****//
+      socket.on('users list', function(data) {
+        if (data) {
+          console.log(data);
+        }
+      });
+
+    });
+  </script>
 </body>
 
 </html>
