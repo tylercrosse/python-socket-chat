@@ -16,25 +16,39 @@
   <script>
     $(function() {
       var socket = io();
-      var username = '';
+      var users = {};
+      var usersKeys = [];
 
-      var addUser = function (data) {
-        $('#users').append('<p id='+ data.user[1] +'>'+ data.user[1] +'</p>');
-      };
+      var updateUsersKeys = function () {
+        usersKeys = Object.keys(users);
+      }
 
-      var removeUser = function (data) {
-
+      var updateUsersList = function () {
+        updateUsersKeys()
+        var key = '';
+        $('#users').html('<strong>Users: </strong>');
+        for (var i=0; i<usersKeys.length; i++) {
+          key = usersKeys[i];
+          user = users[key];
+          $('#users').append('<p id='+ user +'>'+ user +'</p>');
+        }
       };
 
       var addChatMessage = function (data, options) {
-        $('#messages').append('<p>'+ data.message +'</p>');
+        $('#messages').append('<p>'+ data.username +': '+ data.message +'</p>');
       };
 
       //**** Socket Events ****//
       socket.on('users list', function(data) {
         if (data) {
-          console.log(data);
+          users = data;
+          updateUsersList();
         }
+      });
+
+      socket.on('lobby message', function(data) {
+        console.log(data);
+        addChatMessage(data);
       });
 
     });

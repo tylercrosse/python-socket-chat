@@ -39,6 +39,16 @@ def connect(sid, environ):
     print '*' * 50
     sio.emit('users list', users)
 
+
+    @sio.on('lobby message')
+    def lobby_message(sid, message):
+        print '#' * 50
+        print users[sid]
+        print message
+        print '#' * 50
+        sio.emit('lobby message', {'username': users[sid], 'message': message})
+
+
 @sio.on('disconnect')
 def disconnect(sid):
     print '8' * 50
@@ -48,17 +58,6 @@ def disconnect(sid):
     print users
     print '8' * 50
     sio.emit('users list', users)
-
-
-
-
-
-
-    # @sio.on('lobby message')
-    # def lobby_message(sid, message):
-    #     print '*' * 50
-    #     print message
-    #     sio.emit('lobby message', {'message': message, 'user': 'sio.user'})
 
 
 # @sio.on('my broadcast event', namespace='/test')
