@@ -13,9 +13,14 @@
 <body>
   <div id="users"><strong>Users: </strong></div>
   <div id="messages"><strong>Messages: </strong></div>
+  <form id="inputMessage" action="">
+    <input name="msgTxt" type="text" placeholder="Type here..."/>
+    <input type="submit" value="send">
+  </form>
   <script>
     $(function() {
       var socket = io();
+      var username = '';
       var users = {};
       var usersKeys = [];
 
@@ -34,16 +39,34 @@
         }
       };
 
-      var addChatMessage = function (data, options) {
-        $('#messages').append('<p>'+ data.username +': '+ data.message +'</p>');
+      var addChatMessage = function (message, options) {
+        $('#messages').append('<p>'+ message +'</p>');
       };
+
+
+      var cleanInput = function(data) {
+        return $( $.parseHTML(data) ).text(); // prevent markup injection
+      };
+
+      //**** Page Events ****//
+      $('#inputMessage').on('submit', function(e) {
+        e.preventDefault();
+        var msgTxt = $('input[name="msgTxt"]').val(); // get input text
+        $('input[name="msgTxt"]').val(''); // empty input field
+        msgTxt = cleanInput(msgTxt); // prevent markup injection
+        addChatMessage(msgTxt);
+      });
 
       //**** Socket Events ****//
       socket.on('users list', function(data) {
         if (data) {
-          users = data;
+          users = data.users;
           updateUsersList();
         }
+        if (!username && data.username) {
+          username = data.username
+          console.log(username);
+        };
       });
 
       socket.on('lobby message', function(data) {

@@ -32,12 +32,14 @@ users = {}
 
 @sio.on('connect')
 def connect(sid, environ):
-    users.update({sid: names.get_first_name()}) # add new username to users
+    username = {sid: names.get_first_name()}
+    users.update(username) # add new username to users
     print '*' * 50
     print 'connect'
+    print username
     print users
     print '*' * 50
-    sio.emit('users list', users)
+    sio.emit('users list', {'users': users, 'username': username})
 
 
     @sio.on('lobby message')
