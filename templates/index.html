@@ -35,12 +35,16 @@
         for (var i=0; i<usersKeys.length; i++) {
           key = usersKeys[i];
           user = users[key];
-          $('#users').append('<p id='+ user +'>'+ user +'</p>');
+          if (user == username[key]) {
+            $('#users').append('<p id='+ user +'>'+ user +' (me)</p>');
+          } else {
+            $('#users').append('<p id='+ user +'>'+ user +'</p>');
+          }
         }
       };
 
-      var addChatMessage = function (message, options) {
-        $('#messages').append('<p>'+ message +'</p>');
+      var addChatMessage = function (data, options) {
+        $('#messages').append('<p>'+ data.username +': '+ data.message +'</p>');
       };
 
 
@@ -54,19 +58,19 @@
         var msgTxt = $('input[name="msgTxt"]').val(); // get input text
         $('input[name="msgTxt"]').val(''); // empty input field
         msgTxt = cleanInput(msgTxt); // prevent markup injection
-        addChatMessage(msgTxt);
+        socket.emit('lobby message', msgTxt)
       });
 
       //**** Socket Events ****//
       socket.on('users list', function(data) {
-        if (data) {
+        if (!username && data.username) {
+          username = data.username
+          users = data.users;
+          updateUsersList();
+        } else if (data.users) {
           users = data.users;
           updateUsersList();
         }
-        if (!username && data.username) {
-          username = data.username
-          console.log(username);
-        };
       });
 
       socket.on('lobby message', function(data) {
