@@ -12,14 +12,22 @@
 
 <body>
   <div id="users"><strong>Users: </strong></div>
-  <div id="messages"><strong>Messages: </strong></div>
+  <div id="lobbyMessages"><strong>Lobby Messages: </strong></div>
   <form id="inputMessage" action="">
     <input name="msgTxt" type="text" placeholder="Type here..."/>
     <input type="submit" value="send">
   </form>
+  <button id="playBtn">Play Game</button>
+  <div id="games"><strong>Games: </strong></div>
+  <div id="gameMessages"><strong>Game Messages: </strong></div>
   <script>
+
+    // games = [{gameId: {sid: userName}}, ...]
+    var gameList = [];
+
     $(function() {
-      var socket = io();
+      // var socket = io();
+      var socketLob = io.connect('http://'+ document.domain + ':'+ location.port + '/lobby');
       var username = '';
       var users = {};
       var usersKeys = [];
@@ -44,25 +52,52 @@
       };
 
       var addChatMessage = function (data, options) {
-        $('#messages').append('<p>'+ data.username +': '+ data.message +'</p>');
+        $('#lobbbyMessages').append('<p>'+ data.username +': '+ data.message +'</p>');
       };
-
 
       var cleanInput = function(data) {
         return $( $.parseHTML(data) ).text(); // prevent markup injection
       };
 
-      //**** Page Events ****//
+      var renderGameList = function() {
+        console.log('games list called');
+        $games = $('#games')
+        console.log(gameList);
+        console.log(gameList.length);
+        for (var i = 0; i < gameList.length;i++) {
+          var gameId = gameList[i].keys()
+          console.log(gameId);
+          $games.append('<div id='+ gameId +'>'+ gameId +'</div>')
+          console.log($games);
+        }
+      };
+
+      //***************
+      //* Page Events *
+      //***************
+
       $('#inputMessage').on('submit', function(e) {
         e.preventDefault();
-        var msgTxt = $('input[name="msgTxt"]').val(); // get input text
+        var msgTxt = $('input[name="msgTxt"]').val().trim(); // get input text
         $('input[name="msgTxt"]').val(''); // empty input field
         msgTxt = cleanInput(msgTxt); // prevent markup injection
-        socket.emit('lobby message', msgTxt)
+        if (msgTxt) {
+          socketLob.emit('lobby message', msgTxt); // send message
+        };
       });
 
-      //**** Socket Events ****//
-      socket.on('users list', function(data) {
+      $('#playBtn').on('click', function(e) {
+        console.log('play!');
+        socketLob.emit('join game');
+        $('#playBtn').remove();
+      });
+
+      //*****************
+      //* Socket Events *
+      //*****************
+
+      // recieves list of users in lobby when one connects || disconnects
+      socketLob.on('users list', function(data) {
         if (!username && data.username) {
           username = data.username
           users = data.users;
@@ -73,10 +108,33 @@
         }
       });
 
-      socket.on('lobby message', function(data) {
-        console.log(data);
+      // recieves message and call func to display
+      socketLob.on('lobby message', function(data) {
         addChatMessage(data);
       });
+
+      socketLob.on('game created', function(data) {
+        console.log('game created');
+        var gameId = data.game;
+        var user = data.user;
+        gameList[gameId] = [user];
+        console.log(gameList);
+        renderGameList();
+      });
+
+      socketLob.on('game joined', function(data) {
+        console.log('game joined');
+        var user = data.user;
+        var gameId = data.game;
+        gameList[gameId].push(user);
+        console.log(gameList);
+      });
+
+      // 'play button'
+        // -> if no rooms w/ 1 player, create room
+          // -> lobby chat while waiting for other players
+        // -> if room w/ 1 player, join room, leave lobby
+          // -> game chat begins
 
     });
   </script>
